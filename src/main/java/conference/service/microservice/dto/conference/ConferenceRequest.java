@@ -1,9 +1,11 @@
-package conference.service.microservice.dto;
+package conference.service.microservice.dto.conference;
+
 import lombok.Data;
 
 @Data
 public class ConferenceRequest {
-        private String name;
+
+    private String name;
     private String description;
     private String location;
     private boolean virtual;
