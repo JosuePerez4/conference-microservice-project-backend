@@ -1,5 +1,7 @@
 package conference.service.microservice.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 import conference.service.microservice.dto.ConferenceCreated;
@@ -28,5 +30,11 @@ public class ConferenceService {
         conferenceValidator.validateConference(conference);
         Conference savedConference = conferenceRepository.save(conference);
         return conferenceMapper.toConferenceCreated(savedConference);
+    }
+
+    public boolean deleteConferenceById(UUID conferenceId) {
+        boolean delete = conferenceValidator.validateDeleteConference(conferenceId);
+        conferenceRepository.deleteById(conferenceId);
+        return delete;
     }
 }
