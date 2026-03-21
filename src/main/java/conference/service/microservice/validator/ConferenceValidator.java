@@ -6,18 +6,19 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import conference.service.microservice.model.Conference;
-import conference.service.microservice.repository.InscriptionRepository;
+import conference.service.microservice.model.ConferenceEnrollmentSummary;
 import conference.service.microservice.repository.ConferenceRepository;
+import conference.service.microservice.repository.EnrollmentSummaryRepository;
 
 @Component
 public class ConferenceValidator {
 
-    private InscriptionRepository inscription;
-    private ConferenceRepository conferenceRepository;
+    private final ConferenceRepository conferenceRepository;
+    private final EnrollmentSummaryRepository summaryRepo;
 
-    public ConferenceValidator(InscriptionRepository inscription, ConferenceRepository conferenceRepository) {
-        this.inscription = inscription;
+    public ConferenceValidator(ConferenceRepository conferenceRepository, EnrollmentSummaryRepository summaryRepo) {
         this.conferenceRepository = conferenceRepository;
+        this.summaryRepo = summaryRepo;
     }
 
     public void validateConference(Conference conference) {
@@ -61,9 +62,12 @@ public class ConferenceValidator {
     }
 
     private boolean validateNumberOfAttenders(UUID conferenceId) {
-        int numberOfAttendees = inscription.countByConferenceId(conferenceId);
-        if (numberOfAttendees > 0) {
-            throw new IllegalStateException("Cannot delete conference with existing inscriptions");
+        boolean tieneInscripciones = summaryRepo.findById(conferenceId)
+                .map(ConferenceEnrollmentSummary::hasEnrollments)
+                .orElse(false);
+
+        if (tieneInscripciones) {
+            throw new IllegalStateException("Cannot delete conference with existing enrollments");
         }
         return true;
     }

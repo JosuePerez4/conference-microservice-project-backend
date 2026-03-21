@@ -1,5 +1,7 @@
 package conference.service.microservice.controller;
 
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,11 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import conference.service.microservice.dto.ConferenceCreated;
-import conference.service.microservice.dto.ConferenceRequest;
+import conference.service.microservice.dto.conference.ConferenceCreated;
+import conference.service.microservice.dto.conference.ConferenceRequest;
 import conference.service.microservice.service.ConferenceService;
 import jakarta.validation.Valid;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/conferences")

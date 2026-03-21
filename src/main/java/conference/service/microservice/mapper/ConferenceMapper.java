@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import conference.service.microservice.dto.ConferenceCreated;
-import conference.service.microservice.dto.ConferenceRequest;
+import conference.service.microservice.dto.conference.ConferenceCreated;
+import conference.service.microservice.dto.conference.ConferenceRequest;
 import conference.service.microservice.enums.ConferenceState;
 import conference.service.microservice.model.Conference;
 
@@ -36,7 +36,7 @@ public class ConferenceMapper {
         throw new IllegalArgumentException("Formato de fecha inválido: " + dateString + ". Use YYYY-MM-DD o DD-MM-YYYY.");
     }
 
-    public Conference toConference (ConferenceRequest conferenceRequest) {
+    public Conference toConference(ConferenceRequest conferenceRequest) {
         Conference conference = new Conference();
         conference.setId(UUID.randomUUID());
         conference.setName(conferenceRequest.getName());
@@ -57,7 +57,7 @@ public class ConferenceMapper {
 
         return conference;
     }
-    
+
     public ConferenceCreated toConferenceCreated(Conference conference) {
         ConferenceCreated conferenceCreated = new ConferenceCreated();
         conferenceCreated.setName(conference.getName());
