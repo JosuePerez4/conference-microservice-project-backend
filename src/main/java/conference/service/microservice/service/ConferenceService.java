@@ -33,7 +33,6 @@ public class ConferenceService {
     public ConferenceCreated createConference(ConferenceRequest conferenceRequest) {
         Conference conference = conferenceMapper.toConference(conferenceRequest);
         conference.setId(null);
-        System.out.println("Conference to be created: " + conference);
         conferenceValidator.validateConference(conference);
         Conference savedConference = conferenceRepository.save(conference);
 
@@ -44,6 +43,17 @@ public class ConferenceService {
         summary.setUpdatedAt(LocalDateTime.now());
         summaryRepo.save(summary);
         return conferenceMapper.toConferenceCreated(savedConference);
+    }
+
+    public ConferenceCreated updateConferenceById(UUID id, ConferenceRequest conferenceRequest) {
+        Conference existingConference = conferenceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + id));
+
+        conferenceMapper.updateConferenceFromRequest(existingConference, conferenceRequest);
+        conferenceValidator.validateConference(existingConference);
+
+        Conference updatedConference = conferenceRepository.save(existingConference);
+        return conferenceMapper.toConferenceCreated(updatedConference);
     }
 
     public boolean deleteConferenceById(UUID id) {

@@ -39,12 +39,17 @@ public class ConferenceMapper {
     public Conference toConference(ConferenceRequest conferenceRequest) {
         Conference conference = new Conference();
         conference.setId(UUID.randomUUID());
+        updateConferenceFromRequest(conference, conferenceRequest);
+
+        return conference;
+    }
+
+    public void updateConferenceFromRequest(Conference conference, ConferenceRequest conferenceRequest) {
         conference.setName(conferenceRequest.getName());
         conference.setDescription(conferenceRequest.getDescription());
         conference.setLocation(conferenceRequest.getLocation());
         conference.setVirtual(conferenceRequest.isVirtual());
         conference.setInscriptionPrice(conferenceRequest.getInscriptionPrice());
-
         conference.setStartDate(parseDate(conferenceRequest.getStartDate()));
         conference.setEndDate(parseDate(conferenceRequest.getEndDate()));
         conference.setSubmissionDeadline(parseDate(conferenceRequest.getSubmissionDeadline()));
@@ -54,8 +59,6 @@ public class ConferenceMapper {
         } else {
             conference.setState(null);
         }
-
-        return conference;
     }
 
     public ConferenceCreated toConferenceCreated(Conference conference) {
