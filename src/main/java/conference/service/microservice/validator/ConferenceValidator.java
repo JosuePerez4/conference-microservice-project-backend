@@ -44,8 +44,12 @@ public class ConferenceValidator {
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Conference dates cannot be null");
         }
-        if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+        LocalDate today = LocalDate.now();
+        if (!startDate.isAfter(today)) {
+            throw new IllegalArgumentException("Start date must be after current date");
+        }
+        if (!endDate.isAfter(startDate)) {
+            throw new IllegalArgumentException("End date must be after start date");
         }
     }
 
@@ -76,8 +80,12 @@ public class ConferenceValidator {
         if (deadline == null) {
             throw new IllegalArgumentException("Submission deadline cannot be null");
         }
-        if (deadline.isBefore(startDate) || deadline.isAfter(endDate)) {
-            throw new IllegalArgumentException("Submission deadline must be between start and end date");
+        LocalDate today = LocalDate.now();
+        if (deadline.isBefore(today) || deadline.isAfter(startDate)) {
+            throw new IllegalArgumentException("Submission deadline must be between current date and start date");
+        }
+        if (!endDate.isAfter(startDate)) {
+            throw new IllegalArgumentException("End date must be after start date");
         }
     }
 

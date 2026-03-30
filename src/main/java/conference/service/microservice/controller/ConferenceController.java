@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +30,14 @@ public class ConferenceController {
     public ResponseEntity<ConferenceCreated> createConference(@Valid @RequestBody ConferenceRequest conference) {
         ConferenceCreated createdConference = conferenceService.createConference(conference);
         return ResponseEntity.ok(createdConference);
+    }
+
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<ConferenceCreated> updateConference(
+            @PathVariable UUID id,
+            @Valid @RequestBody ConferenceRequest conferenceRequest) {
+        ConferenceCreated updatedConference = conferenceService.updateConferenceById(id, conferenceRequest);
+        return ResponseEntity.ok(updatedConference);
     }
 
     @DeleteMapping("/{id}")
