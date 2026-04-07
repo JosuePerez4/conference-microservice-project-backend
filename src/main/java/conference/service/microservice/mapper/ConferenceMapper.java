@@ -63,6 +63,7 @@ public class ConferenceMapper {
 
     public ConferenceCreated toConferenceCreated(Conference conference) {
         ConferenceCreated conferenceCreated = new ConferenceCreated();
+        conferenceCreated.setId(conference.getId());
         conferenceCreated.setName(conference.getName());
         conferenceCreated.setDescription(conference.getDescription());
         conferenceCreated.setLocation(conference.getLocation());
