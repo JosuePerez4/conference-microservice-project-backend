@@ -41,18 +41,18 @@ public class ConferenceController {
         return ResponseEntity.ok(updatedConference);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public ResponseEntity<ConferenceCreated> getConferenceById(@PathVariable UUID id) {
         ConferenceCreated conference = conferenceService.getConferenceById(id);
         return ResponseEntity.ok(conference);
     }
 
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<java.util.List<ConferenceCreated>> getAllConferences() {
         return ResponseEntity.ok(conferenceService.getAllConferences());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteConference(@PathVariable UUID id) {
         boolean deleted = conferenceService.deleteConferenceById(id);
         if (deleted) {
