@@ -56,6 +56,18 @@ public class ConferenceService {
         return conferenceMapper.toConferenceCreated(updatedConference);
     }
 
+    public ConferenceCreated getConferenceById(UUID id) {
+        Conference conference = conferenceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + id));
+        return conferenceMapper.toConferenceCreated(conference);
+    }
+
+    public java.util.List<ConferenceCreated> getAllConferences() {
+        return conferenceRepository.findAll().stream()
+                .map(conferenceMapper::toConferenceCreated)
+                .toList();
+    }
+
     public boolean deleteConferenceById(UUID id) {
         // Buscar conferencia por ID, lanzar excepción si no existe
         Conference conference = conferenceRepository.findById(id)
