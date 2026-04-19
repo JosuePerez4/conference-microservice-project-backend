@@ -1,6 +1,7 @@
 package conference.service.microservice.mapper;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,10 +20,10 @@ public class ConferenceMapper {
         if (values == null) {
             return null;
         }
-        return values.stream()
+        return new ArrayList<>(values.stream()
                 .filter(value -> value != null && !value.isBlank())
                 .map(String::trim)
-                .toList();
+                .toList());
     }
 
     private LocalDate parseDate(String dateString) {
