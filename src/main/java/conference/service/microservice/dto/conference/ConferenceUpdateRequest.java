@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class ConferenceRequest {
+public class ConferenceUpdateRequest {
 
     private String name;
     private String description;

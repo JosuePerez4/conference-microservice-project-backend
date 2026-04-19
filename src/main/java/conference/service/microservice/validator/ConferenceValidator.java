@@ -1,6 +1,7 @@
 package conference.service.microservice.validator;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -23,10 +24,22 @@ public class ConferenceValidator {
 
     public void validateConference(Conference conference) {
         validateName(conference.getName());
-        validateDates(conference.getStartDate(), conference.getEndDate());
+        validateDates(conference.getStartDate(), conference.getEndDate(), true);
         validateLocation(conference.getLocation());
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
+        validateTopics(conference.getTopics());
+        validateSpeakers(conference.getSpeakers());
+    }
+
+    public void validateConferenceForUpdate(Conference conference) {
+        validateName(conference.getName());
+        validateDates(conference.getStartDate(), conference.getEndDate(), false);
+        validateLocation(conference.getLocation());
+        validateInscriptionPrice(conference.getInscriptionPrice());
+        validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
+        validateTopics(conference.getTopics());
+        validateSpeakers(conference.getSpeakers());
     }
 
     public boolean validateDeleteConference(UUID conferenceId) {
@@ -40,12 +53,11 @@ public class ConferenceValidator {
         }
     }
 
-    private void validateDates(LocalDate startDate, LocalDate endDate) {
+    private void validateDates(LocalDate startDate, LocalDate endDate, boolean validateFutureStartDate) {
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Conference dates cannot be null");
         }
-        LocalDate today = LocalDate.now();
-        if (!startDate.isAfter(today)) {
+        if (validateFutureStartDate && !startDate.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Start date must be after current date");
         }
         if (!endDate.isAfter(startDate)) {
@@ -80,12 +92,32 @@ public class ConferenceValidator {
         if (deadline == null) {
             throw new IllegalArgumentException("Submission deadline cannot be null");
         }
-        LocalDate today = LocalDate.now();
-        if (deadline.isBefore(today) || deadline.isAfter(startDate)) {
-            throw new IllegalArgumentException("Submission deadline must be between current date and start date");
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Conference dates cannot be null");
+        }
+        if (deadline.isBefore(startDate) || deadline.isAfter(endDate)) {
+            throw new IllegalArgumentException("Submission deadline must be between start date and end date");
         }
         if (!endDate.isAfter(startDate)) {
             throw new IllegalArgumentException("End date must be after start date");
+        }
+    }
+
+    private void validateTopics(List<String> topics) {
+        if (topics == null || topics.isEmpty()) {
+            throw new IllegalArgumentException("Conference topics cannot be null or empty");
+        }
+        if (topics.stream().anyMatch(topic -> topic == null || topic.isBlank())) {
+            throw new IllegalArgumentException("Conference topics cannot contain empty values");
+        }
+    }
+
+    private void validateSpeakers(List<String> speakers) {
+        if (speakers == null || speakers.isEmpty()) {
+            throw new IllegalArgumentException("Conference speakers cannot be null or empty");
+        }
+        if (speakers.stream().anyMatch(speaker -> speaker == null || speaker.isBlank())) {
+            throw new IllegalArgumentException("Conference speakers cannot contain empty values");
         }
     }
 

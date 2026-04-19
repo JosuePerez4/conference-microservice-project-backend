@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
+import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
 import conference.service.microservice.service.ConferenceService;
 import jakarta.validation.Valid;
 
@@ -36,7 +37,7 @@ public class ConferenceController {
     @PutMapping("/edit/{id}")
     public ResponseEntity<ConferenceCreated> updateConference(
             @PathVariable UUID id,
-            @Valid @RequestBody ConferenceRequest conferenceRequest) {
+            @Valid @RequestBody ConferenceUpdateRequest conferenceRequest) {
         ConferenceCreated updatedConference = conferenceService.updateConferenceById(id, conferenceRequest);
         return ResponseEntity.ok(updatedConference);
     }
