@@ -105,8 +105,6 @@ public class ConferenceMapper {
 
         if (conferenceRequest.getState() != null && !conferenceRequest.getState().isBlank()) {
             conference.setState(ConferenceState.valueOf(conferenceRequest.getState().trim().toUpperCase()));
-        } else {
-            conference.setState(null);
         }
     }
 
