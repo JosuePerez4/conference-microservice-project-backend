@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
+import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
 import conference.service.microservice.mapper.ConferenceMapper;
 import conference.service.microservice.model.Conference;
 import conference.service.microservice.model.ConferenceEnrollmentSummary;
@@ -45,12 +46,12 @@ public class ConferenceService {
         return conferenceMapper.toConferenceCreated(savedConference);
     }
 
-    public ConferenceCreated updateConferenceById(UUID id, ConferenceRequest conferenceRequest) {
+    public ConferenceCreated updateConferenceById(UUID id, ConferenceUpdateRequest conferenceRequest) {
         Conference existingConference = conferenceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + id));
 
-        conferenceMapper.updateConferenceFromRequest(existingConference, conferenceRequest);
-        conferenceValidator.validateConference(existingConference);
+        conferenceMapper.updateConferenceFromUpdateRequest(existingConference, conferenceRequest);
+        conferenceValidator.validateConferenceForUpdate(existingConference);
 
         Conference updatedConference = conferenceRepository.save(existingConference);
         return conferenceMapper.toConferenceCreated(updatedConference);

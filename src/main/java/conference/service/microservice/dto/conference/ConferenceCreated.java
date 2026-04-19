@@ -1,5 +1,6 @@
 package conference.service.microservice.dto.conference;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.Data;
@@ -16,5 +17,7 @@ public class ConferenceCreated {
     private String startDate;
     private String endDate;
     private String submissionDeadline;
+    private List<String> topics;
+    private List<String> speakers;
     private String state;
 }

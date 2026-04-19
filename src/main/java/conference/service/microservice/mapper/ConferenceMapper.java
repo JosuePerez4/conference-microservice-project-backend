@@ -1,17 +1,29 @@
 package conference.service.microservice.mapper;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
+import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
 import conference.service.microservice.enums.ConferenceState;
 import conference.service.microservice.model.Conference;
 
 @Component
 public class ConferenceMapper {
+
+    private List<String> normalizeStringList(List<String> values) {
+        if (values == null) {
+            return null;
+        }
+        return values.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .map(String::trim)
+                .toList();
+    }
 
     private LocalDate parseDate(String dateString) {
         if (dateString == null || dateString.isBlank()) {
@@ -50,9 +62,46 @@ public class ConferenceMapper {
         conference.setLocation(conferenceRequest.getLocation());
         conference.setVirtual(conferenceRequest.isVirtual());
         conference.setInscriptionPrice(conferenceRequest.getInscriptionPrice());
-        conference.setStartDate(parseDate(conferenceRequest.getStartDate()));
-        conference.setEndDate(parseDate(conferenceRequest.getEndDate()));
-        conference.setSubmissionDeadline(parseDate(conferenceRequest.getSubmissionDeadline()));
+        if (conferenceRequest.getStartDate() != null && !conferenceRequest.getStartDate().isBlank()) {
+            conference.setStartDate(parseDate(conferenceRequest.getStartDate()));
+        }
+        if (conferenceRequest.getEndDate() != null && !conferenceRequest.getEndDate().isBlank()) {
+            conference.setEndDate(parseDate(conferenceRequest.getEndDate()));
+        }
+        if (conferenceRequest.getSubmissionDeadline() != null && !conferenceRequest.getSubmissionDeadline().isBlank()) {
+            conference.setSubmissionDeadline(parseDate(conferenceRequest.getSubmissionDeadline()));
+        }
+        conference.setTopics(normalizeStringList(conferenceRequest.getTopics()));
+        conference.setSpeakers(normalizeStringList(conferenceRequest.getSpeakers()));
+
+        if (conferenceRequest.getState() != null && !conferenceRequest.getState().isBlank()) {
+            conference.setState(ConferenceState.valueOf(conferenceRequest.getState().trim().toUpperCase()));
+        } else {
+            conference.setState(null);
+        }
+    }
+
+    public void updateConferenceFromUpdateRequest(Conference conference, ConferenceUpdateRequest conferenceRequest) {
+        conference.setName(conferenceRequest.getName());
+        conference.setDescription(conferenceRequest.getDescription());
+        conference.setLocation(conferenceRequest.getLocation());
+        conference.setVirtual(conferenceRequest.isVirtual());
+        conference.setInscriptionPrice(conferenceRequest.getInscriptionPrice());
+        if (conferenceRequest.getStartDate() != null && !conferenceRequest.getStartDate().isBlank()) {
+            conference.setStartDate(parseDate(conferenceRequest.getStartDate()));
+        }
+        if (conferenceRequest.getEndDate() != null && !conferenceRequest.getEndDate().isBlank()) {
+            conference.setEndDate(parseDate(conferenceRequest.getEndDate()));
+        }
+        if (conferenceRequest.getSubmissionDeadline() != null && !conferenceRequest.getSubmissionDeadline().isBlank()) {
+            conference.setSubmissionDeadline(parseDate(conferenceRequest.getSubmissionDeadline()));
+        }
+        if (conferenceRequest.getTopics() != null) {
+            conference.setTopics(normalizeStringList(conferenceRequest.getTopics()));
+        }
+        if (conferenceRequest.getSpeakers() != null) {
+            conference.setSpeakers(normalizeStringList(conferenceRequest.getSpeakers()));
+        }
 
         if (conferenceRequest.getState() != null && !conferenceRequest.getState().isBlank()) {
             conference.setState(ConferenceState.valueOf(conferenceRequest.getState().trim().toUpperCase()));
@@ -72,6 +121,8 @@ public class ConferenceMapper {
         conferenceCreated.setStartDate(conference.getStartDate() != null ? conference.getStartDate().toString() : null);
         conferenceCreated.setEndDate(conference.getEndDate() != null ? conference.getEndDate().toString() : null);
         conferenceCreated.setSubmissionDeadline(conference.getSubmissionDeadline() != null ? conference.getSubmissionDeadline().toString() : null);
+        conferenceCreated.setTopics(conference.getTopics());
+        conferenceCreated.setSpeakers(conference.getSpeakers());
         String state = conference.getState() != null ? conference.getState().name() : null;
         conferenceCreated.setState(state);
         return conferenceCreated;
