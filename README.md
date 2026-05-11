@@ -66,6 +66,10 @@ setting before using this service in environments where schema changes must be c
 
 ## Running locally
 
+Before starting the app, make sure PostgreSQL and RabbitMQ are reachable with the values in
+`.env`. The service validates `JWT_PUBLIC_KEY` and `FRONTEND_URL` during startup, so missing
+or malformed values fail fast before requests are served.
+
 ```bash
 ./mvnw spring-boot:run
 ```
@@ -74,6 +78,31 @@ OpenAPI is available when the service is running:
 
 - Swagger UI: `http://localhost:8081/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8081/v3/api-docs`
+
+## Developer workflow
+
+Use the Maven wrapper from the repository root:
+
+```bash
+./mvnw test
+./mvnw package
+```
+
+The current test context starts the full Spring application, so local test runs need the same
+required configuration as the app: a PostgreSQL JDBC URL, `FRONTEND_URL`, and a valid
+`JWT_PUBLIC_KEY`. If you only need to validate compilation while external services are not
+available, run:
+
+```bash
+./mvnw -DskipTests package
+```
+
+When changing conference request or response fields, update these classes together:
+
+- `ConferenceRequest` and `ConferenceUpdateRequest` for inbound JSON.
+- `ConferenceCreated` for outbound JSON.
+- `ConferenceMapper` for date parsing, list normalization, and state conversion.
+- `ConferenceValidator` for create, update, and delete business rules.
 
 ## Docker
 
@@ -141,8 +170,12 @@ Authorization: Bearer <jwt>
 Content-Type: application/json
 ```
 
-Uses the same JSON fields as create. The update path applies scalar fields from the request
-and only replaces `topics` or `speakers` when those arrays are present.
+Uses the same JSON fields as create. The update path has full-replacement behavior for scalar
+fields (`name`, `description`, `location`, `virtual`, and `inscriptionPrice`), so clients must
+send valid values for required fields on every update. Date fields are parsed only when the
+request contains non-blank strings; omitted or blank date fields keep the existing stored dates.
+`topics` and `speakers` are replaced only when those arrays are present. `state` changes only
+when a non-blank value is provided.
 
 ### Read conferences
 
@@ -209,6 +242,17 @@ Expected event payload:
 row when needed. `enrollment.cancelled` decrements the total without going below zero. The
 `tipo` field is carried by the event DTO; current listener logic does not branch on it.
 
+Operational notes:
+
+- `RabbitMQConfig` declares durable queues and binds them to `enrollment.events` at startup.
+- `EnrollmentEventListener` updates only the summary table; it does not validate that the
+  conference row still exists when a message arrives.
+- `ConferenceService.createConference` initializes a summary row with `totalInscriptions = 0`.
+- `ConferenceValidator.validateDeleteConference` blocks deletion when the summary row reports
+  one or more enrollments. Missing summary rows are treated as zero enrollments.
+- If enrollment counts stop changing, verify broker connectivity, queue bindings, and listener
+  errors for `conference.enrollment.created` and `conference.enrollment.cancelled`.
+
 ## Troubleshooting
 
 - **Startup fails with `JWT_PUBLIC_KEY`:** verify that the value is an RSA public key in PEM
@@ -218,5 +262,10 @@ row when needed. `enrollment.cancelled` decrements the total without going below
 - **Database connection fails:** confirm `SPRING_DATASOURCE_URL` is set; it has no default.
 - **Protected endpoints return 403:** make sure the JWT contains `roles` or `role` with one
   of the roles required by the endpoint.
+- **Updates unexpectedly clear fields:** update requests replace scalar fields directly from
+  the JSON body. Send the existing value again if the field should remain unchanged.
 - **Delete returns a validation error:** the conference has enrollment summary count greater
   than zero; consume or correct enrollment cancellation events before deleting.
+- **Delete succeeds while enrollments exist elsewhere:** inspect
+  `conference_enrollment_summary.total_inscriptions`; delete protection only reads that local
+  summary table, which is maintained from RabbitMQ enrollment events.
