@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/conferences/delete/**").hasAnyRole("ADMIN", "CHAIR")
                 .requestMatchers(HttpMethod.GET, "/conferences/get-all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/conferences/get/**")
-                .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASSISTANT")
+                .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASISTANT")
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
