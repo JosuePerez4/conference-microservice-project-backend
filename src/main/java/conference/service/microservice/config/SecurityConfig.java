@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/conferences/get/**")
                 .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASISTANT")
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/actuator", "/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
