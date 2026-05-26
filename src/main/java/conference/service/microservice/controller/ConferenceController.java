@@ -53,6 +53,11 @@ public class ConferenceController {
         return ResponseEntity.ok(conferenceService.getAllConferences());
     }
 
+    @GetMapping("/history")
+    public ResponseEntity<java.util.List<ConferenceCreated>> getConferenceHistory() {
+        return ResponseEntity.ok(conferenceService.getConferenceHistory());
+    }
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteConference(@PathVariable UUID id) {
         boolean deleted = conferenceService.deleteConferenceById(id);

@@ -69,6 +69,12 @@ public class ConferenceService {
                 .toList();
     }
 
+    public java.util.List<ConferenceCreated> getConferenceHistory() {
+        return conferenceRepository.findAllByOrderByStartDateDesc().stream()
+                .map(conferenceMapper::toConferenceCreated)
+                .toList();
+    }
+
     public boolean deleteConferenceById(UUID id) {
         // Buscar conferencia por ID, lanzar excepción si no existe
         Conference conference = conferenceRepository.findById(id)
