@@ -4,7 +4,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
-// import java.util.Arrays; // solo usado por CORS (comentado)
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,10 +21,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-// CORS desactivado aquí (se maneja en API Gateway)
-// import org.springframework.web.cors.CorsConfiguration;
-// import org.springframework.web.cors.CorsConfigurationSource;
-// import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -49,6 +44,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/conferences/get-all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/conferences/get/**")
                 .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASISTANT")
+                .requestMatchers(HttpMethod.GET, "/conferences/my-participation-history")
+                .hasRole("AUTHOR")
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator", "/actuator/**").permitAll()
                 .anyRequest().authenticated()

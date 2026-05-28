@@ -1,8 +1,11 @@
 package conference.service.microservice.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import conference.service.microservice.dto.conference.AuthorConferenceHistoryItem;
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
 import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
 import conference.service.microservice.service.ConferenceService;
+import conference.service.microservice.util.JwtClaimsUtil;
 import jakarta.validation.Valid;
 
 @RestController
@@ -51,6 +56,13 @@ public class ConferenceController {
     @GetMapping("/get-all")
     public ResponseEntity<java.util.List<ConferenceCreated>> getAllConferences() {
         return ResponseEntity.ok(conferenceService.getAllConferences());
+    }
+
+    @GetMapping("/my-participation-history")
+    public ResponseEntity<List<AuthorConferenceHistoryItem>> getMyParticipationHistory(
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID authorId = JwtClaimsUtil.extractUserId(jwt);
+        return ResponseEntity.ok(conferenceService.getAuthorParticipationHistory(authorId));
     }
 
     @DeleteMapping("/delete/{id}")
