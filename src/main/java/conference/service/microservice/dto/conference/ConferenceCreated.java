@@ -18,6 +18,6 @@ public class ConferenceCreated {
     private String endDate;
     private String submissionDeadline;
     private List<String> topics;
-    private List<String> speakers;
+    private List<UUID> speakerIds;
     private String state;
 }

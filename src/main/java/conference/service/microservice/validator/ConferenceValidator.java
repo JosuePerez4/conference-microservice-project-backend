@@ -29,7 +29,7 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
-        validateSpeakers(conference.getSpeakers());
+        validateSpeakerIds(conference.getSpeakerIds());
     }
 
     public void validateConferenceForUpdate(Conference conference) {
@@ -39,7 +39,7 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
-        validateSpeakers(conference.getSpeakers());
+        validateSpeakerIds(conference.getSpeakerIds());
     }
 
     public boolean validateDeleteConference(UUID conferenceId) {
@@ -112,12 +112,12 @@ public class ConferenceValidator {
         }
     }
 
-    private void validateSpeakers(List<String> speakers) {
-        if (speakers == null || speakers.isEmpty()) {
-            throw new IllegalArgumentException("Conference speakers cannot be null or empty");
+    private void validateSpeakerIds(List<UUID> speakerIds) {
+        if (speakerIds == null) {
+            return;
         }
-        if (speakers.stream().anyMatch(speaker -> speaker == null || speaker.isBlank())) {
-            throw new IllegalArgumentException("Conference speakers cannot contain empty values");
+        if (speakerIds.stream().anyMatch(speakerId -> speakerId == null)) {
+            throw new IllegalArgumentException("Conference speaker IDs cannot contain null values");
         }
     }
 

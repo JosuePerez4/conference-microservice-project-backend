@@ -1,6 +1,7 @@
 package conference.service.microservice.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,8 +46,8 @@ public class Conference {
     private List<String> topics;
     @ElementCollection
     @CollectionTable(name = "conference_speakers", joinColumns = @JoinColumn(name = "conference_id"))
-    @Column(name = "speaker")
-    private List<String> speakers;
+    @Column(name = "user_id", nullable = false)
+    private List<UUID> speakerIds = new ArrayList<>();
     @Enumerated(EnumType.STRING)
     private ConferenceState state;
 }

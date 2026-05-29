@@ -1,9 +1,11 @@
 package conference.service.microservice.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
@@ -39,7 +41,7 @@ public class ConferenceService {
 
         // crear registro en la tabla sombra
         ConferenceEnrollmentSummary summary = new ConferenceEnrollmentSummary();
-        summary.setConferenceId(conference.getId());
+        summary.setConferenceId(savedConference.getId());
         summary.setTotalInscriptions(0);
         summary.setUpdatedAt(LocalDateTime.now());
         summaryRepo.save(summary);
@@ -73,6 +75,25 @@ public class ConferenceService {
         return conferenceRepository.findAllByOrderByStartDateDesc().stream()
                 .map(conferenceMapper::toConferenceCreated)
                 .toList();
+    }
+
+    @Transactional
+    public void addSpeakerFromAcceptedArticle(UUID conferenceId, UUID authorId) {
+        if (authorId == null) {
+            throw new IllegalArgumentException("Author ID cannot be null");
+        }
+
+        Conference conference = conferenceRepository.findById(conferenceId)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + conferenceId));
+
+        if (conference.getSpeakerIds() == null) {
+            conference.setSpeakerIds(new ArrayList<>());
+        }
+
+        if (!conference.getSpeakerIds().contains(authorId)) {
+            conference.getSpeakerIds().add(authorId);
+            conferenceRepository.save(conference);
+        }
     }
 
     public boolean deleteConferenceById(UUID id) {
