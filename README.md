@@ -18,6 +18,8 @@ active enrollments cannot be deleted.
   key and authorizes endpoints by role.
 - **Messaging:** Spring AMQP consumes enrollment lifecycle events from RabbitMQ and updates
   the enrollment summary.
+- **Author history:** author enrollment events are mirrored into
+  `author_conference_participation` so authors can read their own participation history.
 
 ## Requirements
 
@@ -43,8 +45,8 @@ exists. Do not commit `.env`; it is ignored by git.
 | `RABBITMQ_PASSWORD` | No | `guest` | RabbitMQ password. |
 | `RABBITMQ_VHOST` | No | `/` | RabbitMQ virtual host. |
 | `RABBITMQ_SSL_ENABLED` | No | `false` | Enables RabbitMQ TLS. |
-| `FRONTEND_URL` | Yes | none | Allowed CORS origins. Use comma-separated origins for more than one. |
 | `JWT_PUBLIC_KEY` | Yes | none | RSA public key used to validate JWT signatures. PEM text and escaped `\n` are accepted. |
+| `EUREKA_SERVER_URL` | Yes | none | Eureka server URL used by service discovery. |
 
 Example `.env` for local development:
 
@@ -57,12 +59,15 @@ RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USERNAME=guest
 RABBITMQ_PASSWORD=guest
-FRONTEND_URL=http://localhost:3000
 JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----
+EUREKA_SERVER_URL=http://localhost:8761/eureka
 ```
 
 `spring.jpa.hibernate.ddl-auto=update` is enabled in `application.properties`; review that
 setting before using this service in environments where schema changes must be controlled.
+CORS is currently disabled in this service; configure browser CORS at the API Gateway. The
+commented service-level CORS bean in `SecurityConfig` references `FRONTEND_URL` only if it is
+reactivated.
 
 ## Running locally
 
@@ -95,15 +100,19 @@ All protected endpoints require a bearer JWT. Roles are read from either:
 - `role`: a single string, for example `"AUTHOR"`
 
 The service adds the `ROLE_` prefix internally when it is not already present.
+Endpoints that use the current user read a UUID from the `userId` claim, falling back to the
+JWT subject (`sub`) when `userId` is absent.
 
 | Method | Path | Access |
 | --- | --- | --- |
 | `POST` | `/conferences/create` | `ADMIN`, `CHAIR` |
 | `PUT` | `/conferences/edit/{id}` | `ADMIN`, `CHAIR` |
-| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASSISTANT` |
+| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASISTANT` |
 | `GET` | `/conferences/get-all` | Public |
+| `GET` | `/conferences/my-participation-history` | `AUTHOR` |
 | `DELETE` | `/conferences/delete/{id}` | `ADMIN`, `CHAIR` |
 | `GET` | `/swagger-ui/**`, `/v3/api-docs/**` | Public |
+| `GET` | `/actuator/**` | Public |
 
 ## Conference API
 
@@ -154,6 +163,41 @@ Authorization: Bearer <jwt>
 ```http
 GET /conferences/get-all
 ```
+
+### Read my author participation history
+
+```http
+GET /conferences/my-participation-history
+Authorization: Bearer <jwt with AUTHOR role and UUID userId or sub>
+```
+
+Returns the current author's conferences ordered by the stored participation timestamp,
+newest first:
+
+```json
+[
+  {
+    "conference": {
+      "id": "5b91f8c0-2c76-41c9-b46f-89952d82b4d6",
+      "name": "Distributed Systems Conf",
+      "description": "Research and practice sessions",
+      "location": "Bogota",
+      "virtual": false,
+      "inscriptionPrice": 120.0,
+      "startDate": "2026-09-10",
+      "endDate": "2026-09-12",
+      "submissionDeadline": "2026-09-10",
+      "topics": ["distributed systems", "messaging"],
+      "speakers": ["Ada Lovelace"],
+      "state": "DRAFT"
+    },
+    "participatedAt": "2026-06-01T11:00:00"
+  }
+]
+```
+
+The history table is maintained from enrollment events with `tipo: "AUTOR"`. If the related
+conference row no longer exists, that history entry is skipped in the response.
 
 ### Delete a conference
 
@@ -207,16 +251,22 @@ Expected event payload:
 
 `enrollment.created` increments `totalInscriptions` for the conference, creating the summary
 row when needed. `enrollment.cancelled` decrements the total without going below zero. The
-`tipo` field is carried by the event DTO; current listener logic does not branch on it.
+listener also records author participation when `tipo` is `AUTOR`, using `(userId,
+conferenceId)` as the history key and `participatedAt` as the time the event was consumed.
+Cancelling an `AUTOR` enrollment removes that author history row. Non-author enrollments only
+affect the enrollment summary.
 
 ## Troubleshooting
 
 - **Startup fails with `JWT_PUBLIC_KEY`:** verify that the value is an RSA public key in PEM
   or base64 form. Escaped newlines (`\n`) are normalized by the service.
-- **CORS requests fail:** set `FRONTEND_URL` to the exact frontend origin. For multiple
-  origins, use a comma-separated list.
+- **Service does not register in Eureka:** verify `EUREKA_SERVER_URL`; it is required and has
+  no default value.
+- **CORS requests fail:** configure CORS at the API Gateway. The microservice-level CORS bean
+  is commented out.
 - **Database connection fails:** confirm `SPRING_DATASOURCE_URL` is set; it has no default.
 - **Protected endpoints return 403:** make sure the JWT contains `roles` or `role` with one
   of the roles required by the endpoint.
+- **Author history returns 400:** the token must include `userId` or `sub` as a valid UUID.
 - **Delete returns a validation error:** the conference has enrollment summary count greater
   than zero; consume or correct enrollment cancellation events before deleting.
