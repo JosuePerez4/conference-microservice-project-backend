@@ -8,4 +8,5 @@ import conference.service.microservice.model.Conference;
 
 @Repository
 public interface ConferenceRepository extends JpaRepository<Conference,UUID> {
+    java.util.List<Conference> findAllByOrderByStartDateDesc();
 }

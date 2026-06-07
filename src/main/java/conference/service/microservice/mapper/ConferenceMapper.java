@@ -16,6 +16,16 @@ import conference.service.microservice.model.Conference;
 @Component
 public class ConferenceMapper {
 
+    private List<UUID> normalizeUuidList(List<UUID> values) {
+        if (values == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(values.stream()
+                .filter(value -> value != null)
+                .distinct()
+                .toList());
+    }
+
     private List<String> normalizeStringList(List<String> values) {
         if (values == null) {
             return null;
@@ -24,6 +34,13 @@ public class ConferenceMapper {
                 .filter(value -> value != null && !value.isBlank())
                 .map(String::trim)
                 .toList());
+    }
+
+    private List<String> normalizeOptionalStringList(List<String> values) {
+        if (values == null) {
+            return new ArrayList<>();
+        }
+        return normalizeStringList(values);
     }
 
     private LocalDate parseDate(String dateString) {
@@ -73,7 +90,8 @@ public class ConferenceMapper {
             conference.setSubmissionDeadline(parseDate(conferenceRequest.getSubmissionDeadline()));
         }
         conference.setTopics(normalizeStringList(conferenceRequest.getTopics()));
-        conference.setSpeakers(normalizeStringList(conferenceRequest.getSpeakers()));
+        conference.setSponsors(normalizeOptionalStringList(conferenceRequest.getSponsors()));
+        conference.setSpeakerIds(normalizeUuidList(conferenceRequest.getSpeakerIds()));
 
         if (conferenceRequest.getState() != null && !conferenceRequest.getState().isBlank()) {
             conference.setState(ConferenceState.valueOf(conferenceRequest.getState().trim().toUpperCase()));
@@ -100,8 +118,11 @@ public class ConferenceMapper {
         if (conferenceRequest.getTopics() != null) {
             conference.setTopics(normalizeStringList(conferenceRequest.getTopics()));
         }
-        if (conferenceRequest.getSpeakers() != null) {
-            conference.setSpeakers(normalizeStringList(conferenceRequest.getSpeakers()));
+        if (conferenceRequest.getSponsors() != null) {
+            conference.setSponsors(normalizeOptionalStringList(conferenceRequest.getSponsors()));
+        }
+        if (conferenceRequest.getSpeakerIds() != null) {
+            conference.setSpeakerIds(normalizeUuidList(conferenceRequest.getSpeakerIds()));
         }
 
         if (conferenceRequest.getState() != null && !conferenceRequest.getState().isBlank()) {
@@ -121,7 +142,8 @@ public class ConferenceMapper {
         conferenceCreated.setEndDate(conference.getEndDate() != null ? conference.getEndDate().toString() : null);
         conferenceCreated.setSubmissionDeadline(conference.getSubmissionDeadline() != null ? conference.getSubmissionDeadline().toString() : null);
         conferenceCreated.setTopics(conference.getTopics());
-        conferenceCreated.setSpeakers(conference.getSpeakers());
+        conferenceCreated.setSponsors(conference.getSponsors());
+        conferenceCreated.setSpeakerIds(conference.getSpeakerIds());
         String state = conference.getState() != null ? conference.getState().name() : null;
         conferenceCreated.setState(state);
         return conferenceCreated;

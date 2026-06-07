@@ -29,7 +29,8 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
-        validateSpeakers(conference.getSpeakers());
+        validateSponsors(conference.getSponsors());
+        validateSpeakerIds(conference.getSpeakerIds());
     }
 
     public void validateConferenceForUpdate(Conference conference) {
@@ -39,7 +40,17 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
-        validateSpeakers(conference.getSpeakers());
+        validateSponsors(conference.getSponsors());
+        validateSpeakerIds(conference.getSpeakerIds());
+    }
+
+    public void validateSponsorsToAdd(List<String> sponsors) {
+        if (sponsors == null || sponsors.isEmpty()) {
+            throw new IllegalArgumentException("Sponsor list cannot be null or empty");
+        }
+        if (sponsors.stream().anyMatch(sponsor -> sponsor == null || sponsor.isBlank())) {
+            throw new IllegalArgumentException("Sponsor names cannot contain empty values");
+        }
     }
 
     public boolean validateDeleteConference(UUID conferenceId) {
@@ -112,12 +123,21 @@ public class ConferenceValidator {
         }
     }
 
-    private void validateSpeakers(List<String> speakers) {
-        if (speakers == null || speakers.isEmpty()) {
-            throw new IllegalArgumentException("Conference speakers cannot be null or empty");
+    private void validateSponsors(List<String> sponsors) {
+        if (sponsors == null) {
+            return;
         }
-        if (speakers.stream().anyMatch(speaker -> speaker == null || speaker.isBlank())) {
-            throw new IllegalArgumentException("Conference speakers cannot contain empty values");
+        if (sponsors.stream().anyMatch(sponsor -> sponsor == null || sponsor.isBlank())) {
+            throw new IllegalArgumentException("Conference sponsors cannot contain empty values");
+        }
+    }
+
+    private void validateSpeakerIds(List<UUID> speakerIds) {
+        if (speakerIds == null) {
+            return;
+        }
+        if (speakerIds.stream().anyMatch(speakerId -> speakerId == null)) {
+            throw new IllegalArgumentException("Conference speaker IDs cannot contain null values");
         }
     }
 

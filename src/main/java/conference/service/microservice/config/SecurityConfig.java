@@ -39,9 +39,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/conferences/create").hasAnyRole("ADMIN", "CHAIR")
+                .requestMatchers(HttpMethod.POST, "/conferences/*/sponsors").hasAnyRole("ADMIN", "CHAIR")
                 .requestMatchers(HttpMethod.PUT, "/conferences/edit/**").hasAnyRole("ADMIN", "CHAIR")
                 .requestMatchers(HttpMethod.DELETE, "/conferences/delete/**").hasAnyRole("ADMIN", "CHAIR")
                 .requestMatchers(HttpMethod.GET, "/conferences/get-all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/conferences/history").permitAll()
                 .requestMatchers(HttpMethod.GET, "/conferences/get/**")
                 .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASISTANT")
                 .requestMatchers(HttpMethod.GET, "/conferences/my-participation-history")

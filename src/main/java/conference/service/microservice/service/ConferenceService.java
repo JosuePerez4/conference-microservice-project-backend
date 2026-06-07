@@ -1,11 +1,12 @@
 package conference.service.microservice.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import conference.service.microservice.dto.conference.AuthorConferenceHistoryItem;
 import conference.service.microservice.dto.conference.ConferenceCreated;
@@ -51,7 +52,7 @@ public class ConferenceService {
 
         // crear registro en la tabla sombra
         ConferenceEnrollmentSummary summary = new ConferenceEnrollmentSummary();
-        summary.setConferenceId(conference.getId());
+        summary.setConferenceId(savedConference.getId());
         summary.setTotalInscriptions(0);
         summary.setUpdatedAt(LocalDateTime.now());
         summaryRepo.save(summary);
@@ -81,13 +82,56 @@ public class ConferenceService {
                 .toList();
     }
 
-    public List<AuthorConferenceHistoryItem> getAuthorParticipationHistory(UUID authorId) {
-        return authorParticipationRepo.findByUserIdOrderByParticipatedAtDesc(authorId).stream()
-                .map(this::toHistoryItem)
-                .filter(Objects::nonNull)
+    public java.util.List<ConferenceCreated> getConferenceHistory() {
+        return conferenceRepository.findAllByOrderByStartDateDesc().stream()
+                .map(conferenceMapper::toConferenceCreated)
                 .toList();
     }
 
+    @Transactional
+    public ConferenceCreated addSponsors(UUID conferenceId, List<String> sponsors) {
+        conferenceValidator.validateSponsorsToAdd(sponsors);
+
+        Conference conference = conferenceRepository.findById(conferenceId)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + conferenceId));
+
+        if (conference.getSponsors() == null) {
+            conference.setSponsors(new ArrayList<>());
+        }
+
+        List<String> normalizedSponsors = sponsors.stream()
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        for (String sponsor : normalizedSponsors) {
+            if (!conference.getSponsors().contains(sponsor)) {
+                conference.getSponsors().add(sponsor);
+            }
+        }
+
+        Conference updatedConference = conferenceRepository.save(conference);
+        return conferenceMapper.toConferenceCreated(updatedConference);
+    }
+
+    @Transactional
+    public void addSpeakerFromAcceptedArticle(UUID conferenceId, UUID authorId) {
+        if (authorId == null) {
+            throw new IllegalArgumentException("Author ID cannot be null");
+        }
+
+        Conference conference = conferenceRepository.findById(conferenceId)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + conferenceId));
+
+        if (conference.getSpeakerIds() == null) {
+            conference.setSpeakerIds(new ArrayList<>());
+        }
+
+        if (!conference.getSpeakerIds().contains(authorId)) {
+            conference.getSpeakerIds().add(authorId);
+            conferenceRepository.save(conference);
+        }
+    }
     public boolean deleteConferenceById(UUID id) {
         // Buscar conferencia por ID, lanzar excepción si no existe
         Conference conference = conferenceRepository.findById(id)

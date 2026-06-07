@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import conference.service.microservice.dto.conference.AuthorConferenceHistoryItem;
+import conference.service.microservice.dto.conference.AddSponsorsRequest;
+
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
 import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
@@ -39,6 +40,14 @@ public class ConferenceController {
         return ResponseEntity.ok(createdConference);
     }
 
+    @PostMapping("/{id}/sponsors")
+    public ResponseEntity<ConferenceCreated> addSponsors(
+            @PathVariable UUID id,
+            @Valid @RequestBody AddSponsorsRequest request) {
+        ConferenceCreated updatedConference = conferenceService.addSponsors(id, request.getSponsors());
+        return ResponseEntity.ok(updatedConference);
+    }
+
     @PutMapping("/edit/{id}")
     public ResponseEntity<ConferenceCreated> updateConference(
             @PathVariable UUID id,
@@ -58,11 +67,9 @@ public class ConferenceController {
         return ResponseEntity.ok(conferenceService.getAllConferences());
     }
 
-    @GetMapping("/my-participation-history")
-    public ResponseEntity<List<AuthorConferenceHistoryItem>> getMyParticipationHistory(
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID authorId = JwtClaimsUtil.extractUserId(jwt);
-        return ResponseEntity.ok(conferenceService.getAuthorParticipationHistory(authorId));
+    @GetMapping("/history")
+    public ResponseEntity<java.util.List<ConferenceCreated>> getConferenceHistory() {
+        return ResponseEntity.ok(conferenceService.getConferenceHistory());
     }
 
     @DeleteMapping("/delete/{id}")

@@ -15,6 +15,10 @@ public class RabbitMQConfig {
     public static final String QUEUE_CREATED = "conference.enrollment.created";
     public static final String QUEUE_CANCELLED = "conference.enrollment.cancelled";
 
+    public static final String ARTICLE_EXCHANGE = "article.events";
+    public static final String QUEUE_ARTICLE_ACCEPTED = "conference.article.accepted";
+    public static final String ROUTING_KEY_ARTICLE_ACCEPTED = "article.accepted";
+
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
@@ -49,5 +53,27 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(enrollmentCancelledQueue)
                 .to(enrollmentExchange)
                 .with("enrollment.cancelled");
+    }
+
+    @Bean
+    public TopicExchange articleExchange() {
+        return new TopicExchange(ARTICLE_EXCHANGE);
+    }
+
+    @Bean
+    public Queue articleAcceptedQueue() {
+        return new Queue(QUEUE_ARTICLE_ACCEPTED, true);
+    }
+
+    @Bean
+    public Binding bindingArticleAccepted(Queue articleAcceptedQueue, TopicExchange articleExchange) {
+        return BindingBuilder.bind(articleAcceptedQueue)
+                .to(articleExchange)
+                .with(ROUTING_KEY_ARTICLE_ACCEPTED);
+    }
+
+    @Bean
+    public Jackson2JsonMessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 }
