@@ -2,6 +2,7 @@ package conference.service.microservice.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -75,6 +76,32 @@ public class ConferenceService {
         return conferenceRepository.findAllByOrderByStartDateDesc().stream()
                 .map(conferenceMapper::toConferenceCreated)
                 .toList();
+    }
+
+    @Transactional
+    public ConferenceCreated addSponsors(UUID conferenceId, List<String> sponsors) {
+        conferenceValidator.validateSponsorsToAdd(sponsors);
+
+        Conference conference = conferenceRepository.findById(conferenceId)
+                .orElseThrow(() -> new EntityNotFoundException("Conferencia no encontrada: " + conferenceId));
+
+        if (conference.getSponsors() == null) {
+            conference.setSponsors(new ArrayList<>());
+        }
+
+        List<String> normalizedSponsors = sponsors.stream()
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        for (String sponsor : normalizedSponsors) {
+            if (!conference.getSponsors().contains(sponsor)) {
+                conference.getSponsors().add(sponsor);
+            }
+        }
+
+        Conference updatedConference = conferenceRepository.save(conference);
+        return conferenceMapper.toConferenceCreated(updatedConference);
     }
 
     @Transactional

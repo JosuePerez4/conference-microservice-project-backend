@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import conference.service.microservice.dto.conference.AddSponsorsRequest;
 import conference.service.microservice.dto.conference.ConferenceCreated;
 import conference.service.microservice.dto.conference.ConferenceRequest;
 import conference.service.microservice.dto.conference.ConferenceUpdateRequest;
@@ -32,6 +33,14 @@ public class ConferenceController {
     public ResponseEntity<ConferenceCreated> createConference(@Valid @RequestBody ConferenceRequest conference) {
         ConferenceCreated createdConference = conferenceService.createConference(conference);
         return ResponseEntity.ok(createdConference);
+    }
+
+    @PostMapping("/{id}/sponsors")
+    public ResponseEntity<ConferenceCreated> addSponsors(
+            @PathVariable UUID id,
+            @Valid @RequestBody AddSponsorsRequest request) {
+        ConferenceCreated updatedConference = conferenceService.addSponsors(id, request.getSponsors());
+        return ResponseEntity.ok(updatedConference);
     }
 
     @PutMapping("/edit/{id}")

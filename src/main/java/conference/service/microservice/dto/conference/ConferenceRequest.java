@@ -17,6 +17,7 @@ public class ConferenceRequest {
     private String endDate;
     private String submissionDeadline;
     private List<String> topics;
+    private List<String> sponsors;
     private List<UUID> speakerIds;
     private String state;
 }

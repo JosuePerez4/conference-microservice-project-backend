@@ -29,6 +29,7 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
+        validateSponsors(conference.getSponsors());
         validateSpeakerIds(conference.getSpeakerIds());
     }
 
@@ -39,7 +40,17 @@ public class ConferenceValidator {
         validateInscriptionPrice(conference.getInscriptionPrice());
         validateSubmissionDeadline(conference.getSubmissionDeadline(), conference.getStartDate(), conference.getEndDate());
         validateTopics(conference.getTopics());
+        validateSponsors(conference.getSponsors());
         validateSpeakerIds(conference.getSpeakerIds());
+    }
+
+    public void validateSponsorsToAdd(List<String> sponsors) {
+        if (sponsors == null || sponsors.isEmpty()) {
+            throw new IllegalArgumentException("Sponsor list cannot be null or empty");
+        }
+        if (sponsors.stream().anyMatch(sponsor -> sponsor == null || sponsor.isBlank())) {
+            throw new IllegalArgumentException("Sponsor names cannot contain empty values");
+        }
     }
 
     public boolean validateDeleteConference(UUID conferenceId) {
@@ -109,6 +120,15 @@ public class ConferenceValidator {
         }
         if (topics.stream().anyMatch(topic -> topic == null || topic.isBlank())) {
             throw new IllegalArgumentException("Conference topics cannot contain empty values");
+        }
+    }
+
+    private void validateSponsors(List<String> sponsors) {
+        if (sponsors == null) {
+            return;
+        }
+        if (sponsors.stream().anyMatch(sponsor -> sponsor == null || sponsor.isBlank())) {
+            throw new IllegalArgumentException("Conference sponsors cannot contain empty values");
         }
     }
 
