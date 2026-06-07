@@ -20,6 +20,11 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_ARTICLE_ACCEPTED = "article.accepted";
 
     @Bean
+    public Jackson2JsonMessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
     public TopicExchange enrollmentExchange() {
         return new TopicExchange(EXCHANGE);
     }
