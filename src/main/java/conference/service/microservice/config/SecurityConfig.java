@@ -4,7 +4,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,15 +21,13 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
 
-    @Value("${FRONTEND_URL}")
-    private String frontendUrl;
+    // CORS: origen permitido (reactivar si vuelves a habilitar corsConfigurationSource)
+    // @Value("${FRONTEND_URL}")
+    // private String frontendUrl;
 
     @Value("${JWT_PUBLIC_KEY}")
     private String jwtPublicKey;
@@ -38,7 +35,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/conferences/create").hasAnyRole("ADMIN", "CHAIR")
@@ -49,6 +46,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/conferences/history").permitAll()
                 .requestMatchers(HttpMethod.GET, "/conferences/get/**")
                 .hasAnyRole("ADMIN", "AUTHOR", "CHAIR", "ASISTANT")
+                .requestMatchers(HttpMethod.GET, "/conferences/my-participation-history")
+                .hasRole("AUTHOR")
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator", "/actuator/**").permitAll()
                 .anyRequest().authenticated()
@@ -109,20 +108,21 @@ public class SecurityConfig {
         }
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.stream(frontendUrl.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-        config.setAllowedOriginPatterns(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    // CORS en microservicio desactivado: configurar en API Gateway para evitar duplicidad
+    // @Bean
+    // public CorsConfigurationSource corsConfigurationSource() {
+    //     CorsConfiguration config = new CorsConfiguration();
+    //     List<String> origins = Arrays.stream(frontendUrl.split(","))
+    //             .map(String::trim)
+    //             .filter(s -> !s.isEmpty())
+    //             .toList();
+    //     config.setAllowedOriginPatterns(origins);
+    //     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    //     config.setAllowedHeaders(List.of("*"));
+    //     config.setAllowCredentials(true);
+    //
+    //     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    //     source.registerCorsConfiguration("/**", config);
+    //     return source;
+    // }
 }
