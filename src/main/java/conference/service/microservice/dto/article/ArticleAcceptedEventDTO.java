@@ -10,4 +10,5 @@ public class ArticleAcceptedEventDTO {
     private UUID articleId;
     private UUID conferenceId;
     private List<UUID> authorIds;
+    private UUID presenterId;
 }

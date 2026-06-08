@@ -39,11 +39,17 @@ public class ArticleEventListener {
         }
 
         try {
-            for (UUID authorId : authorIds) {
-                conferenceService.addSpeakerFromAcceptedArticle(event.getConferenceId(), authorId);
+            if (event.getPresenterId() != null) {
+                conferenceService.addSpeakerFromAcceptedArticle(event.getConferenceId(), event.getPresenterId());
+                log.info("Ponente {} agregado a la conferencia {} por artículo aceptado {}",
+                        event.getPresenterId(), event.getConferenceId(), event.getArticleId());
+            } else {
+                for (UUID authorId : authorIds) {
+                    conferenceService.addSpeakerFromAcceptedArticle(event.getConferenceId(), authorId);
+                }
+                log.info("Speakers {} agregados a la conferencia {} por artículo aceptado {}",
+                        authorIds, event.getConferenceId(), event.getArticleId());
             }
-            log.info("Speakers {} agregados a la conferencia {} por artículo aceptado {}",
-                    authorIds, event.getConferenceId(), event.getArticleId());
         } catch (EntityNotFoundException ex) {
             log.error("No se pudo agregar speakers: conferencia {} no existe", event.getConferenceId());
         }
