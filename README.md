@@ -15,7 +15,7 @@ active enrollments cannot be deleted.
   topics and speakers. `ConferenceEnrollmentSummary` stores total inscriptions per
   conference.
 - **Security:** Spring Security OAuth2 Resource Server validates JWTs with an RSA public
-  key and authorizes endpoints by role.
+  key and authorizes endpoints by role. CORS is intentionally left to the API Gateway.
 - **Messaging:** Spring AMQP consumes enrollment lifecycle events from RabbitMQ and updates
   the enrollment summary.
 
@@ -43,7 +43,6 @@ exists. Do not commit `.env`; it is ignored by git.
 | `RABBITMQ_PASSWORD` | No | `guest` | RabbitMQ password. |
 | `RABBITMQ_VHOST` | No | `/` | RabbitMQ virtual host. |
 | `RABBITMQ_SSL_ENABLED` | No | `false` | Enables RabbitMQ TLS. |
-| `FRONTEND_URL` | Yes | none | Allowed CORS origins. Use comma-separated origins for more than one. |
 | `JWT_PUBLIC_KEY` | Yes | none | RSA public key used to validate JWT signatures. PEM text and escaped `\n` are accepted. |
 
 Example `.env` for local development:
@@ -57,12 +56,22 @@ RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USERNAME=guest
 RABBITMQ_PASSWORD=guest
-FRONTEND_URL=http://localhost:3000
 JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----
 ```
 
 `spring.jpa.hibernate.ddl-auto=update` is enabled in `application.properties`; review that
 setting before using this service in environments where schema changes must be controlled.
+
+## CORS and gateway ownership
+
+The microservice does not currently register a CORS configuration. `SecurityConfig` has the
+CORS bean commented out so browser cross-origin policy is owned by the API Gateway instead of
+being duplicated here. Setting `FRONTEND_URL` in this service has no effect unless the CORS
+bean is re-enabled in code.
+
+When running a browser client locally, route requests through the gateway and configure the
+gateway with the exact frontend origin. Direct browser calls to this service may fail preflight
+checks even when the JWT and endpoint permissions are correct.
 
 ## Running locally
 
@@ -100,7 +109,7 @@ The service adds the `ROLE_` prefix internally when it is not already present.
 | --- | --- | --- |
 | `POST` | `/conferences/create` | `ADMIN`, `CHAIR` |
 | `PUT` | `/conferences/edit/{id}` | `ADMIN`, `CHAIR` |
-| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASSISTANT` |
+| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASISTANT` |
 | `GET` | `/conferences/get-all` | Public |
 | `DELETE` | `/conferences/delete/{id}` | `ADMIN`, `CHAIR` |
 | `GET` | `/swagger-ui/**`, `/v3/api-docs/**` | Public |
@@ -213,10 +222,11 @@ row when needed. `enrollment.cancelled` decrements the total without going below
 
 - **Startup fails with `JWT_PUBLIC_KEY`:** verify that the value is an RSA public key in PEM
   or base64 form. Escaped newlines (`\n`) are normalized by the service.
-- **CORS requests fail:** set `FRONTEND_URL` to the exact frontend origin. For multiple
-  origins, use a comma-separated list.
+- **CORS requests fail:** the service does not enable CORS locally. Configure allowed origins
+  in the API Gateway and send browser traffic through that gateway.
 - **Database connection fails:** confirm `SPRING_DATASOURCE_URL` is set; it has no default.
 - **Protected endpoints return 403:** make sure the JWT contains `roles` or `role` with one
-  of the roles required by the endpoint.
+  of the exact roles required by the endpoint, including the current `ASISTANT` spelling for
+  read-by-id access.
 - **Delete returns a validation error:** the conference has enrollment summary count greater
   than zero; consume or correct enrollment cancellation events before deleting.
