@@ -18,6 +18,8 @@ active enrollments cannot be deleted.
   key and authorizes endpoints by role.
 - **Messaging:** Spring AMQP consumes enrollment lifecycle events from RabbitMQ and updates
   the enrollment summary.
+- **Service discovery and health:** Spring Cloud registers the service with Eureka, and
+  Actuator exposes health and info endpoints for platform probes.
 
 ## Requirements
 
@@ -25,6 +27,7 @@ active enrollments cannot be deleted.
 - Maven wrapper (`./mvnw`) or Maven 3.9+
 - PostgreSQL
 - RabbitMQ
+- Eureka-compatible service registry
 
 ## Configuration
 
@@ -43,7 +46,7 @@ exists. Do not commit `.env`; it is ignored by git.
 | `RABBITMQ_PASSWORD` | No | `guest` | RabbitMQ password. |
 | `RABBITMQ_VHOST` | No | `/` | RabbitMQ virtual host. |
 | `RABBITMQ_SSL_ENABLED` | No | `false` | Enables RabbitMQ TLS. |
-| `FRONTEND_URL` | Yes | none | Allowed CORS origins. Use comma-separated origins for more than one. |
+| `EUREKA_SERVER_URL` | Yes | none | Eureka registry URL, for example `http://localhost:8761/eureka/`. |
 | `JWT_PUBLIC_KEY` | Yes | none | RSA public key used to validate JWT signatures. PEM text and escaped `\n` are accepted. |
 
 Example `.env` for local development:
@@ -57,12 +60,14 @@ RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USERNAME=guest
 RABBITMQ_PASSWORD=guest
-FRONTEND_URL=http://localhost:3000
+EUREKA_SERVER_URL=http://localhost:8761/eureka/
 JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----
 ```
 
 `spring.jpa.hibernate.ddl-auto=update` is enabled in `application.properties`; review that
 setting before using this service in environments where schema changes must be controlled.
+Browser CORS is intentionally not configured in this microservice; configure frontend
+origins at the API Gateway layer to avoid duplicate CORS policy handling.
 
 ## Running locally
 
@@ -74,6 +79,15 @@ OpenAPI is available when the service is running:
 
 - Swagger UI: `http://localhost:8081/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8081/v3/api-docs`
+
+Operational endpoints are also exposed without authentication:
+
+- Health: `http://localhost:8081/actuator/health`
+- Info: `http://localhost:8081/actuator/info`
+
+The Eureka client uses `EUREKA_SERVER_URL` as
+`eureka.client.service-url.defaultZone` and registers with
+`eureka.instance.prefer-ip-address=true`.
 
 ## Docker
 
@@ -100,10 +114,11 @@ The service adds the `ROLE_` prefix internally when it is not already present.
 | --- | --- | --- |
 | `POST` | `/conferences/create` | `ADMIN`, `CHAIR` |
 | `PUT` | `/conferences/edit/{id}` | `ADMIN`, `CHAIR` |
-| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASSISTANT` |
+| `GET` | `/conferences/get/{id}` | `ADMIN`, `AUTHOR`, `CHAIR`, `ASISTANT` |
 | `GET` | `/conferences/get-all` | Public |
 | `DELETE` | `/conferences/delete/{id}` | `ADMIN`, `CHAIR` |
 | `GET` | `/swagger-ui/**`, `/v3/api-docs/**` | Public |
+| `GET` | `/actuator/**` | Public |
 
 ## Conference API
 
@@ -213,8 +228,10 @@ row when needed. `enrollment.cancelled` decrements the total without going below
 
 - **Startup fails with `JWT_PUBLIC_KEY`:** verify that the value is an RSA public key in PEM
   or base64 form. Escaped newlines (`\n`) are normalized by the service.
-- **CORS requests fail:** set `FRONTEND_URL` to the exact frontend origin. For multiple
-  origins, use a comma-separated list.
+- **Startup fails while resolving Eureka settings:** confirm `EUREKA_SERVER_URL` is set to
+  the registry endpoint, including the `/eureka/` path expected by the registry.
+- **CORS requests fail:** configure allowed frontend origins in the API Gateway. CORS support
+  in `SecurityConfig` is commented out in this service.
 - **Database connection fails:** confirm `SPRING_DATASOURCE_URL` is set; it has no default.
 - **Protected endpoints return 403:** make sure the JWT contains `roles` or `role` with one
   of the roles required by the endpoint.
